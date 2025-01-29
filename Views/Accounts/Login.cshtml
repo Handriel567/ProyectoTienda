@@ -1,0 +1,357 @@
+﻿@{
+    Layout = null;
+}
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Iniciar Sesión - PurchaseBetter</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+</head>
+<body>
+    <!-- Header refinado -->
+    <header class="header navbar navbar-expand-lg navbar-light bg-white fixed-top py-2">
+        <div class="container-fluid">
+            <!-- Logo -->
+            <a class="navbar-brand fw-bold fs-5 text-primary d-flex align-items-center" href="#">
+                <i class="bi bi-cart-check fs-4 me-2"></i>
+                PurchaseBetter
+            </a>
+
+            <!-- Barra de búsqueda -->
+            <form class="d-flex search-container mx-auto">
+                <input class="form-control me-2 search-input" type="search" placeholder="Buscar productos..." aria-label="Buscar">
+                <button class="btn btn-primary search-btn" type="submit">
+                    <i class="bi bi-search"></i>
+                </button>
+            </form>
+
+            <!-- Iconos de redes sociales -->
+            <div class="social-icons d-flex gap-3 ms-auto">
+                <a href="#" class="text-dark social-icon"><i class="bi bi-facebook"></i></a>
+                <a href="#" class="text-dark social-icon"><i class="bi bi-twitter"></i></a>
+                <a href="#" class="text-dark social-icon"><i class="bi bi-instagram"></i></a>
+            </div>
+        </div>
+    </header>
+
+    <!-- Contenido principal -->
+    <main class="main-content pt-5 mt-5">
+        <div class="container text-center py-4">
+            <div class="info-section">
+                <h1 class="display-5 fw-bold mb-3">Bienvenido a PurchaseBetter</h1>
+                <p class="lead mb-4 text-muted" style="font-size: 1.1rem;">Accede a todas nuestras funcionalidades y gestiona tu cuenta de manera fácil y segura.</p>
+                <a href="#" class="btn btn-primary btn-lg px-4 py-2">Iniciar Sesión</a>
+            </div>
+        </div>
+    </main>
+
+    <!-- Botón de chat flotante -->
+    <button id="chat-toggle" class="btn btn-primary btn-lg rounded-circle position-fixed bottom-4 end-4 m-3">
+        <i class="bi bi-chat-dots"></i>
+    </button>
+
+    <!-- Panel de chat -->
+    <div id="chat-panel" class="position-fixed bottom-4 end-4 m-3" style="width: 300px; height: 400px; background-color: white; border: 1px solid #ddd; border-radius: 10px; box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1); display: none;">
+        <!-- Encabezado del chat -->
+        <div class="d-flex justify-content-between align-items-center p-3 bg-light border-bottom">
+            <h5 class="mb-0">Chat de Soporte</h5>
+            <button id="chat-close" class="btn btn-sm btn-outline-secondary">
+                <i class="bi bi-x"></i>
+            </button>
+        </div>
+
+        <!-- Cuerpo del chat -->
+        <div id="chat-box" class="p-3" style="height: 300px; overflow-y: auto; background-color: #f9f9f9;">
+            <!-- Mensajes del chat aparecerán aquí -->
+        </div>
+
+        <!-- Entrada de mensajes -->
+        <div class="p-3 border-top">
+            <div class="input-group">
+                <input type="text" id="chat-input" class="form-control" placeholder="Escribe un mensaje...">
+                <button class="btn btn-outline-primary" type="button" id="send-text">
+                    <i class="bi bi-send"></i>
+                </button>
+                <button class="btn btn-outline-secondary" type="button" id="send-image">
+                    <i class="bi bi-image"></i>
+                </button>
+            </div>
+            <input type="file" id="image-input" style="display: none;" accept="image/*">
+        </div>
+    </div>
+
+    <!-- Bootstrap JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+
+    <!-- Animaciones y transiciones -->
+    <script>
+              document.addEventListener("DOMContentLoaded", function () {
+            const mainContent = document.querySelector(".main-content");
+            mainContent.style.opacity = "0";
+            mainContent.style.transform = "translateY(20px)";
+            setTimeout(() => {
+                mainContent.style.transition = "opacity 0.8s ease, transform 0.8s ease";
+                mainContent.style.opacity = "1";
+                mainContent.style.transform = "translateY(0)";
+            }, 300);
+
+            // Funcionalidad del chat
+            const chatToggle = document.getElementById('chat-toggle');
+            const chatPanel = document.getElementById('chat-panel');
+            const chatClose = document.getElementById('chat-close');
+            const chatBox = document.getElementById('chat-box');
+            const chatInput = document.getElementById('chat-input');
+            const sendTextButton = document.getElementById('send-text');
+            const sendImageButton = document.getElementById('send-image');
+            const imageInput = document.getElementById('image-input');
+
+
+            // Abrir y cerrar el panel de chat
+            chatToggle.addEventListener('click', function () {
+                chatPanel.style.display = 'block';
+
+        const ws = new WebSocket('wss://socketnode-production-e461.up.railway.app');
+
+
+                    ws.onopen = () => {
+                        console.log('Conectado al servidor WebSocket.');
+                    };
+
+                    ws.onmessage = (event) => {
+                        try {
+                            const message = JSON.parse(event.data);
+                            console.log(message);
+
+                            // Verificar si el mensaje es texto o imagen
+                            if (message.type === 'text') {
+                                // Si es un mensaje de texto
+                                const messageElement = document.createElement('div');
+                                messageElement.className = 'mb-2';
+                                messageElement.innerHTML = `Servicio al Cliente ${message.data || 'Mensaje vacío'}`;
+                                chatBox.appendChild(messageElement);
+                            } else if (message.type === 'image') {
+                                // Si es una imagen
+                                const imageElement = document.createElement('img');
+                                imageElement.src = message.content; // Se asume que la URL o base64 de la imagen está en el campo 'content'
+                                imageElement.style.maxWidth = '100%';
+                                imageElement.style.height = 'auto';
+
+                                const imageMessageElement = document.createElement('div');
+                                imageMessageElement.className = 'mb-2';
+                                imageMessageElement.innerHTML = `<strong>${message.sender}:</strong>`;
+                                imageMessageElement.appendChild(imageElement);
+                                chatBox.appendChild(imageMessageElement);
+                            }
+
+                            // Desplazar hacia el último mensaje
+                            chatBox.scrollTop = chatBox.scrollHeight;
+
+                        } catch (error) {
+                            console.error('Error al procesar el mensaje recibido:', error);
+                        }
+                    };
+                
+            });
+
+            // Cerrar el chat y WebSocket (si está abierto)
+            chatClose.addEventListener('click', function () {
+                chatPanel.style.display = 'none';
+                if (ws && ws.readyState === WebSocket.OPEN) {
+                    ws.close(); // Cerrar el WebSocket cuando se cierre el chat
+                    console.log('WebSocket cerrado.');
+                }
+            });
+
+            // Enviar mensaje de texto
+            sendTextButton.addEventListener('click', function () {
+                const message = chatInput.value.trim();
+ 
+                    const messageElement = document.createElement('div');
+                    messageElement.className = 'mb-2';
+                    messageElement.innerHTML = `<strong>Tú:</strong> ${message}`;
+                    chatBox.appendChild(messageElement);
+                    chatInput.value = '';
+                    chatBox.scrollTop = chatBox.scrollHeight;
+
+                    // Enviar el mensaje de texto por WebSocket
+                    ws.send(JSON.stringify({ type: 'text', data: message, recipentId: 'edc3bd8b-1582-408f-a6c9-4fcc148513f8' }));
+                
+            });
+
+            // Enviar imagen
+            sendImageButton.addEventListener('click', function () {
+                imageInput.click();
+            });
+
+            imageInput.addEventListener('change', function (event) {
+                const file = event.target.files[0];
+                if (file && ws && ws.readyState === WebSocket.OPEN) {
+                    const reader = new FileReader();
+                    reader.onload = function (e) {
+                        const imageElement = document.createElement('img');
+                        imageElement.src = e.target.result;
+                        imageElement.style.maxWidth = '100%';
+                        imageElement.style.height = 'auto';
+                        const messageElement = document.createElement('div');
+                        messageElement.className = 'mb-2';
+                        messageElement.innerHTML = `<strong>Tú:</strong>`;
+                        messageElement.appendChild(imageElement);
+                        chatBox.appendChild(messageElement);
+                        chatBox.scrollTop = chatBox.scrollHeight;
+
+                        // Enviar la imagen por WebSocket
+                        ws.send(JSON.stringify({ type: 'image', content: e.target.result }));
+                    };
+                    reader.readAsDataURL(file);
+                }
+            });
+        });
+
+    </script>
+
+    <!-- Estilos CSS refinados -->
+    <style>
+        body {
+            background-color: #f8f9fa;
+            font-family: 'Inter', sans-serif;
+            padding-top: 70px; /* Ajuste para el header fijo */
+        }
+
+        /* Header */
+        .header {
+            transition: all 0.3s ease-in-out;
+            background-color: rgba(255, 255, 255, 0.98);
+            backdrop-filter: blur(10px);
+            border-bottom: 1px solid rgba(0, 0, 0, 0.05);
+        }
+
+            .header:hover {
+                box-shadow: 0 4px 15px rgba(0, 0, 0, 0.05);
+            }
+
+        /* Barra de búsqueda */
+        .search-container {
+            max-width: 500px;
+            width: 100%;
+        }
+
+        .search-input {
+            border-radius: 25px;
+            border: 1px solid #e0e0e0;
+            padding: 8px 16px;
+            transition: all 0.3s ease;
+            font-size: 0.9rem;
+        }
+
+            .search-input:focus {
+                border-color: #007bff;
+                box-shadow: 0 0 8px rgba(0, 123, 255, 0.1);
+            }
+
+        .search-btn {
+            border-radius: 25px;
+            background-color: #007bff;
+            color: white;
+            padding: 8px 16px;
+            border: none;
+            transition: background-color 0.3s ease, transform 0.3s ease;
+        }
+
+            .search-btn:hover {
+                background-color: #0056b3;
+                transform: translateY(-2px);
+            }
+
+        /* Iconos sociales */
+        .social-icons a {
+            font-size: 18px;
+            transition: color 0.3s ease, transform 0.3s ease;
+        }
+
+            .social-icons a:hover {
+                color: #007bff;
+                transform: translateY(-3px);
+            }
+
+        /* Contenido principal */
+        .main-content {
+            opacity: 0;
+            transform: translateY(20px);
+        }
+
+        /* Botón de inicio de sesión */
+        .btn-primary {
+            padding: 10px 24px;
+            border-radius: 25px;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            background-color: #007bff;
+            border: none;
+            font-size: 0.95rem;
+        }
+
+            .btn-primary:hover {
+                transform: translateY(-2px);
+                box-shadow: 0 4px 15px rgba(0, 123, 255, 0.2);
+            }
+
+        /* Tipografía */
+        h1 {
+            font-weight: 700;
+            color: #2c3e50;
+            font-size: 2.2rem;
+        }
+
+        p {
+            color: #7f8c8d;
+            font-weight: 400;
+        }
+
+        /* Efectos de hover en el logo */
+        .navbar-brand {
+            transition: transform 0.3s ease;
+        }
+
+            .navbar-brand:hover {
+                transform: scale(1.05);
+            }
+
+        /* Botón de chat flotante */
+        #chat-toggle {
+            width: 60px;
+            height: 60px;
+            font-size: 24px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        /* Estilos del panel de chat */
+        #chat-panel {
+            z-index: 1000;
+        }
+
+        #chat-box {
+            background-color: #f9f9f9;
+            border-radius: 5px;
+            padding: 10px;
+        }
+
+        .input-group {
+            margin-top: 10px;
+        }
+
+            .input-group button {
+                border-radius: 0 5px 5px 0;
+            }
+
+            .input-group input {
+                border-radius: 5px 0 0 5px;
+            }
+    </style>
+</body>
+</html>
